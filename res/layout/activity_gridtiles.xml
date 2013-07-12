@@ -1,0 +1,121 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:facebook="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context=".Gridtiles" >
+
+    <TextView
+        android:id="@+id/tvWelcome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:text="Not logged in..."
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/tvWelcome"
+        android:layout_below="@+id/tvWelcome"
+        android:text=""
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+                <ImageView
+                android:id="@+id/ppal"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentTop="true"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:src="@drawable/ic_launcher" />
+    
+    
+    <ImageView
+        android:id="@+id/imageView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textView"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/line" />
+
+    <HorizontalScrollView
+        android:id="@+id/galleryscroll"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/imageView2"
+        android:layout_below="@+id/imageView2" >
+
+        <LinearLayout
+            android:id="@+id/gallery"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="visible" >
+
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <ImageView
+        android:id="@+id/imageView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/galleryscroll"
+        android:layout_below="@+id/galleryscroll"
+        android:src="@drawable/line" />
+
+    <Button
+        android:id="@+id/loginButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Login"
+        android:visibility="invisible" />
+
+    <ImageView
+        android:id="@+id/imageView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/btnLayout"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/ic_launcher" />
+	
+    <Button
+        android:id="@+id/painteron"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/imageView3"
+        android:layout_alignRight="@+id/imageView3"
+        android:layout_below="@+id/imageView3"
+        android:drawableLeft="@drawable/s_button"
+        android:text="Draw Mode" />
+    
+	<LinearLayout
+	    android:id="@+id/btnLayout"
+	    android:layout_width="wrap_content"
+    	android:layout_height="wrap_content"
+    	android:layout_below="@id/painteron"
+    	android:layout_alignLeft="@id/painteron">
+
+	    <Button
+	        android:id="@+id/btnPublish"
+	        android:layout_width="150dp"
+	        android:layout_height="wrap_content"
+	        android:onClick="publishMozaic"
+	        android:text="Publish" />
+	
+	    <Button
+	        android:id="@+id/saveMozaic"
+	        android:layout_width="153dp"
+	        android:layout_height="wrap_content"
+	        android:onClick="saveMozaic"
+	        android:text="Save" />
+
+    </LinearLayout>
+
+</RelativeLayout>
