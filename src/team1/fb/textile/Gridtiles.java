@@ -1,25 +1,36 @@
 package team1.fb.textile;
-
+/* Mosaic app v1.2 by Mobile Programming Team 1
+ * Authors: Angela Gibbens
+ *          Benjamin Roche
+ *          Richard Korn
+ *          Rick Tilley
+ *          
+ * Date: 7/14/2013
+ * Description:
+ * Imports all your facebook friend's profile pictures, then lets you
+ * draw a mosaic with their pictures as tiles.  Also has some cookie-cutter
+ * options, and will post your custom mosaics to facebook or save
+ * them to your phone.  Please be patient while first loading data.
+ */
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-import java.util.Iterator;
-
-import team1.fb.textile.Gridtiles.mozaic.tiles;
-
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -27,30 +38,35 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.PorterDuff.Mode;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
-import android.graphics.PorterDuff.Mode;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.util.Pair;
 import android.view.Display;
-import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.facebook.*;
-import com.facebook.model.*;
+import com.facebook.Request;
+import com.facebook.Response;
+import com.facebook.Session;
+import com.facebook.SessionState;
+import com.facebook.model.GraphUser;
 import com.facebook.widget.ProfilePictureView;
 
 public class Gridtiles extends Activity {
@@ -63,26 +79,13 @@ public class Gridtiles extends Activity {
 	
 	public ProfilePictureView profilePic;
 	ArrayList<String> userIds = new ArrayList<String>();
-	//ArrayList<Bitmap> userPictures = new ArrayList<Bitmap>();
-    //private Session.StatusCallback statusCallback = new SessionStatusCallback();
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_gridtiles);
-		
 		ActionBar actionbar = getActionBar();
 		actionbar.hide();
-		
 		moze = new mozaic();
-		
-		//Settings.addLoggingBehavior(LoggingBehavior.INCLUDE_ACCESS_TOKENS);
-		
-		//profilePic = (ProfilePictureView) findViewById(R.id.profilePic);
-		//profilePic = new ProfilePictureView(getApplicationContext());
-		//profilePic.setEnabled(false);
-
-		Log.i("testing", "booting");
-		
 		if(session == null) {
 	    session = Session.openActiveSession(this, true, new Session.StatusCallback() {
 
@@ -95,14 +98,6 @@ public class Gridtiles extends Activity {
 		    		Toast.makeText(getApplicationContext(), "Logged in", Toast.LENGTH_SHORT).show();
 		    	}
 			    else Log.i("testing", "not logged in :(");
-		    	// make request to the /me API
-		    	/*Request.executeMeRequestAsync(session, new Request.GraphUserCallback() {
-		    	  // callback after Graph API response with user object
-		    	  @Override
-		    	  public void onCompleted(GraphUser user, Response response) {
-		    		  Toast.makeText(getApplicationContext(), "Logged in?", Toast.LENGTH_SHORT).show();
-		    	  }
-		    	});*/
 		    }
 		});
 		Log.i("testing", "booting2");
@@ -123,32 +118,17 @@ public class Gridtiles extends Activity {
             public void onCompleted(List<GraphUser> users, Response response){
             	if (users != null)
             	{
-	            	Log.i("testing", "running myfriendsrequestasync");
 	            	TextView textView = (TextView) findViewById(R.id.textView);
 	                textView.setText("Number of friends: " + users.size());
-	    			Log.i("testing", "running blah3");
 	                String id = new String();
 	                int i = 0;
-	    			Log.i("testing", "go download");
 	                new DownloadFilesTask().execute(users);
-	    			Log.i("testing", "running blah99");
             	}
             	else
             		Log.i("testing","unable to retreive users!");
             }
 		});
 		}
-	   // Log.i("Amount of ids", Integer.toString(userIds.size()));
-	    //profilePic.setProfileId("richard.korn5");
-	    //Request.executeGraphPathRequestAsync(session, graphPath, callback)
-	    
-		
-		Log.i("testing", "done booting, phew");
-		/*moze.loadpic(BitmapFactory.decodeResource(getResources(), R.drawable.pic1));
-		moze.loadpic(BitmapFactory.decodeResource(getResources(), R.drawable.pic2));
-		moze.loadpic(BitmapFactory.decodeResource(getResources(), R.drawable.pic3));
-		moze.loadpic(BitmapFactory.decodeResource(getResources(), R.drawable.glowfish));*/
-		
 	}
 	
 	public void initialLogin (View v) {
@@ -165,7 +145,6 @@ public class Gridtiles extends Activity {
 		}
 		
 		if(session.getPermissions().containsAll(permissionListWrite)) {
-		//Bitmap image = BitmapFactory.decodeResource(this.getResources(), R.drawable.pic1);
 		 Request request = Request.newUploadPhotoRequest(Session.getActiveSession(), publishing, new Request.Callback() {
 			@Override
 			public void onCompleted(Response response) {
@@ -245,7 +224,6 @@ public class Gridtiles extends Activity {
 			// datestamp needed
 			// name of friend or id
 			// optional tag or separate class for tags
-			
 		}
 		
 		ArrayList<tiles> grid;
@@ -259,6 +237,9 @@ public class Gridtiles extends Activity {
 		int galpicidn;
 		int touchidx;
 		boolean drawingmode;
+		// *** Change maxprofiles for testing or speed
+		public static final int MAXPROFILES = 512;
+		// *******************************************
 
 		mozaic()
 		{   int MAXdx = 255;
@@ -310,7 +291,8 @@ public class Gridtiles extends Activity {
 		
 		public void gallery(boolean on)
 		{   LinearLayout gal = (LinearLayout) findViewById(R.id.gallery);
-			Button btn = (Button) findViewById(R.id.painteron);
+/*
+		  Button btn = (Button) findViewById(R.id.painteron);
 			if (on)
 			{  touchidx = 1;
 				btn.setText("Erase Mode");
@@ -324,6 +306,7 @@ public class Gridtiles extends Activity {
 				gal.setVisibility(View.VISIBLE);
 				drawingmode = false;
 			}
+			*/
 		}
 		
 		public void gallery(int bx, int by)
@@ -356,17 +339,13 @@ public class Gridtiles extends Activity {
 			tile.setImageBitmap(blackbox());
 				// maybe make it look different
 			gal.addView(tile);
-//			Log.i("gallery", Integer.toString(grid.size()));
 			palettelistener(tile);
 			while (it.hasNext())
 			{
 				friend = it.next();
 				tile = new ImageView(getApplicationContext());
 				tile.setImageBitmap(friend.profpic);
-//				Log.i("gallery", "getta id");
 				galpicid[galpicidn++] = id = getValidId(galpicidn);
-//				if 
-//				Log.i("gallery", "seta id");
 				tile.setId(id);
 				tile.setLayoutParams(lparams);
 				gal.addView(tile);
@@ -395,9 +374,10 @@ private void palettelistener(ImageView tile)
 						 else
 							 image.setImageBitmap(blackbox());
 					  }
-				  
+				  /*
 				  Button btn = (Button) findViewById(R.id.painteron);
 				  btn.setText("Erase Mode");
+*/
 				  return true;
 			  }
 			});
@@ -456,7 +436,7 @@ private void palettelistener(ImageView tile)
 		public void makeblock(int width, int height)
 		{  
 			 int count = 1;
-			 
+			drawingmode = true;
 			smiley = new int [width][height];
 			facewidth = width; faceheight = height;
 			for (int y = 0; y < width; y++)
@@ -465,7 +445,7 @@ private void palettelistener(ImageView tile)
 				{  
 					smiley[x][y] = count++;
 					if (count > galpicidn)
-						count = 0;
+						count = 1;
 				}
 			}
 		}
@@ -477,50 +457,251 @@ private void palettelistener(ImageView tile)
 		}
 		
 		public void makesmiley(int width, int height)
-		{  int rx = -1*width/2;
-		   int ry = -1*height/2;
-		   int roll = 1;
-			 double r = (width*width/4.0)*0.8;
-	//		 double reye = r/8;
+		{  
+		     int roll = 1;
 			 double rth;
 			 int count = 1;
 			 Random radical = new Random();
+			 int widthx = width*dx;
+			 int heightx = height*dy;
+			 int rx = -1*widthx/2;
+			 int ry = -1*heightx/2;	 
+			 double r = (widthx*widthx/4.0)*0.8;
 			 
-			smiley = new int [width][height];
+			ImageView image = (ImageView) findViewById(R.id.imageView1);
+			Bitmap bigpic = ((BitmapDrawable)image.getDrawable()).getBitmap();
+			Canvas panorama = new Canvas(bigpic);
+			Paint clearpaint = new Paint();
+			clearpaint.setXfermode(new PorterDuffXfermode(Mode.CLEAR));
+
+			Toast.makeText(getApplicationContext(), "Cookie Cutter Working", Toast.LENGTH_LONG).show();
+				
 			facewidth = width; faceheight = height;
-			for (int y = 0; y < width; y++, ry++)
-			{   rx = -1*width/2;
-				for (int x = 0; x < height; x++, rx++)
+			for (int y = 0; y < widthx; y++, ry++)
+			{   rx = -1*widthx/2;
+				for (int x = 0; x < heightx; x++, rx++)
 				{  
 					//roll = radical.nextInt(800);
 				//	smiley[x][y] = radical.nextInt(435);		// for all
-//					smiley[x][y] = count++;
-					if (count > galpicidn)
-						count = 1;
 					// circle
 					rth = rx*rx+ry*ry;
 					if (rth < r)
 					{  // test left eye
-						int dx = x-(4*width/10);
-						int dy = y-(height/3);
-					   rth = dx*dx+dy*dy;
+						int zx = x-(3*widthx/10);
+						int zy = y-(heightx/3);
+					   rth = zx*zx+zy*zy;
 					   if (rth > r/16)
 					   {  // right eye
-						   dx = x-(7*width/10);
-						   rth = dx*dx+dy*dy;
+						   zx = x-(7*widthx/10);
+						   rth = zx*zx+zy*zy;
 						   if (rth > r/16)
 						   {  rth = (rx*rx+ry*ry) - (4*r/7);
 						      rth = rth * rth;
 						   	  if (rth > r*r/128 | ry < 0)
-							     smiley[x][y] = count++;
+						   		  roll = 1; // dummy call, don't draw on smiley
+						   	  else
+						   		  panorama.drawPoint(x,y,clearpaint);
 						   }
+						   else
+							   panorama.drawPoint(x,y,clearpaint);
 					   }
+					   else
+						   panorama.drawPoint(x, y, clearpaint);
 					}
 					else
-						smiley[x][y] = 0;
+						panorama.drawPoint(x, y, clearpaint);
 				}
 			}
+			image.setImageBitmap(bigpic);
+			Log.i("cookie", "smiley has been cut");
+
 		}
+
+		public void maketriangle(int width, int height)
+		{  
+			boolean inside = false;
+			 int widthx = width*dx;
+			 int heightx = height*dy;
+			 int rx = -1*widthx/2;
+			 int ry = -1*heightx/2;	 
+			 double m[] = {0.0,0.0,0.0};
+			 double b[] = {0.0,0.0,0.0};
+			 
+			 // triangle slopes of 3 sides
+			 m[0] = -1 * (heightx/2.0) / (widthx/4.0);
+			 m[1] = -m[0];	m[2] = 0;
+			 b[0] = b[1] = -1*heightx/2.0;
+			 b[2] = -b[0];
+			 
+			 Log.i("dims", Double.toString(m[0])+"+"+Double.toString(b[0]));
+			 Log.i("dims", Double.toString(m[1])+"+"+Double.toString(b[1]));
+			 Log.i("dims", Double.toString(m[2])+"+"+Double.toString(b[2]));
+			 
+			ImageView image = (ImageView) findViewById(R.id.imageView1);
+			Bitmap bigpic = ((BitmapDrawable)image.getDrawable()).getBitmap();
+			Canvas panorama = new Canvas(bigpic);
+			Paint clearpaint = new Paint();
+			clearpaint.setXfermode(new PorterDuffXfermode(Mode.CLEAR));
+
+			Toast.makeText(getApplicationContext(), "Cookie Cutter Working", Toast.LENGTH_LONG).show();
+				
+			facewidth = width; faceheight = height;
+			for (int y = 0; y < widthx; y++, ry++)
+			{   rx = -1*widthx/2;
+				for (int x = 0; x < heightx; x++, rx++)
+				{  
+					if ((ry > (m[0]*rx+b[0]))
+					  & (ry > (m[1]*rx+b[1]))
+					  & (ry < b[2]))
+						inside = true;
+					
+					if (!inside)
+						panorama.drawPoint(x,y,clearpaint);
+					else
+						inside = false;
+				}
+			}
+			image.setImageBitmap(bigpic);
+			Log.i("cookie", "triangle has been cut");
+
+		}
+	
+		class dumbPair
+		{
+			public	double first,second;
+			dumbPair()
+			{
+				
+			}
+		}
+
+		protected dumbPair toPolar(dumbPair cart, dumbPair p)
+		{
+			p.first = Math.sqrt(cart.first*cart.first+cart.second*cart.second);
+			p.second = Math.tan(cart.second/cart.first);
+			return p;
+		}
+
+		protected dumbPair toCart(dumbPair polar, dumbPair c)
+		{
+			c.first = polar.first * Math.cos(polar.second);
+			c.second = polar.first * Math.sin(polar.second);
+			return c;
+		}
+		
+		
+/*		
+		protected Pair<Double, Double> toPolar(Pair<Double, Double> cart)
+		{
+			Pair <Double, Double> p;
+			double r, th;
+			r = Math.sqrt(cart.first*cart.first+cart.second*cart.second);
+			th = Math.tan(cart.second/cart.first);
+			p = Pair.create(r, th);
+			return p;
+		}
+
+		protected Pair<Double, Double> toCart(Pair<Double, Double> polar)
+		{
+			Pair <Double, Double> c;
+			double x, y;
+			x = polar.first * Math.cos(polar.second);
+			y = polar.first * Math.sin(polar.second);
+			c = Pair.create(x,y);
+			return c;
+		}
+	*/	
+		
+		public void makesun(int width, int height)
+		{  
+			boolean inside = false;
+			 int widthx = width*dx;
+			 int heightx = height*dy;
+			 int rx = -1*widthx/2;
+			 int ry = -1*heightx/2;	 
+			 dumbPair cart = new dumbPair();
+			 dumbPair polar = new dumbPair();
+			 double r;
+			 double th;
+			 double scale = 2.0/widthx;
+			 double compval;
+			 
+			ImageView image = (ImageView) findViewById(R.id.imageView1);
+			Bitmap bigpic = ((BitmapDrawable)image.getDrawable()).getBitmap();
+			Canvas panorama = new Canvas(bigpic);
+			Paint clearpaint = new Paint();
+			clearpaint.setXfermode(new PorterDuffXfermode(Mode.CLEAR));
+
+			Toast.makeText(getApplicationContext(), "Cookie Cutter Working", Toast.LENGTH_LONG).show();
+				
+			facewidth = width; faceheight = height;
+			for (int y = 0; y < widthx; y++, ry++)
+			{   rx = -1*widthx/2;
+				for (int x = 0; x < heightx; x++, rx++)
+				{  
+					cart.first = (double)rx;  cart.second = (double)ry;
+					polar = toPolar(cart, polar);
+					r = polar.first * scale; th = polar.second;
+					compval = Math.sin(th*10.0);
+					if (r < (0.9+(compval/10.0)))
+					 inside = true;
+					
+					if (!inside)
+						panorama.drawPoint(x,y,clearpaint);
+					else
+						inside = false;
+				}
+			}
+			image.setImageBitmap(bigpic);
+			Log.i("cookie", "moon has been cut");
+
+		}		
+
+		public void makeflower(int width, int height)
+		{  
+			boolean inside = false;
+			 int widthx = width*dx;
+			 int heightx = height*dy;
+			 int rx = -1*widthx/2;
+			 int ry = -1*heightx/2;	 
+			 dumbPair cart = new dumbPair();
+			 dumbPair polar = new dumbPair();
+			 double r;
+			 double th;
+			 double scale = 2.0/widthx;
+			 double compval;
+			 
+			ImageView image = (ImageView) findViewById(R.id.imageView1);
+			Bitmap bigpic = ((BitmapDrawable)image.getDrawable()).getBitmap();
+			Canvas panorama = new Canvas(bigpic);
+			Paint clearpaint = new Paint();
+			clearpaint.setXfermode(new PorterDuffXfermode(Mode.CLEAR));
+
+			Toast.makeText(getApplicationContext(), "Cookie Cutter Working", Toast.LENGTH_LONG).show();
+				
+			facewidth = width; faceheight = height;
+			for (int y = 0; y < widthx; y++, ry++)
+			{   rx = -1*widthx/2;
+				for (int x = 0; x < heightx; x++, rx++)
+				{  
+					cart.first = (double)rx;  cart.second = (double)ry;
+					polar = toPolar(cart, polar);
+					r = polar.first * scale; th = polar.second;
+					compval = Math.sin(th) * Math.cos(th);
+					if (r < (0.4+compval))
+					 inside = true;
+					
+					if (!inside)
+						panorama.drawPoint(x,y,clearpaint);
+					else
+						inside = false;
+				}
+			}
+			image.setImageBitmap(bigpic);
+			Log.i("cookie", "moon has been cut");
+
+		}		
+		
 		
 		private void drawtile(Canvas portr, int x, int y)
 		{
@@ -535,7 +716,7 @@ private void palettelistener(ImageView tile)
 				portr.drawBitmap(t.profpic,  src,  dest, null);
 			}
 			else
-				if (drawidx == 0)
+				if (drawidx == -1)
 				{
 					// clear the block
 				}
@@ -544,24 +725,19 @@ private void palettelistener(ImageView tile)
 		{
 			if (facewidth > 0 & faceheight > 0)
 			{
-				Log.i("testing", "drawer");
-
 				Iterator<tiles> it = grid.iterator();
 				Bitmap bigpic = Bitmap.createBitmap(facewidth*dx, faceheight*dy, Bitmap.Config.ARGB_8888);
 				Canvas panorama = new Canvas(bigpic);
 				Rect src, dest;
-				Log.i("testing", "starting drawing loop");
 				for (int x = 0; x < facewidth; x++)
 					for (int y = 0; y < faceheight; y++)
 					{   
 						if (smiley[x][y] != 0)
 						{		
-
 							if (!it.hasNext())
 									it = grid.iterator();
 							if (it.hasNext())
 							{
-
 								tiles t = it.next();
 								src = new Rect(0,0,dx,dy);
 								dest = new Rect(src);
@@ -570,7 +746,6 @@ private void palettelistener(ImageView tile)
 							}
 						}
 					}
-				Log.i("testing", "result returns");
 				publishing = bigpic;
 				return bigpic;
 			}
@@ -580,10 +755,27 @@ private void palettelistener(ImageView tile)
 		
 		public Bitmap makemozaic(int width, int height)
 		{	
-			makeblock(width, height);		// important
+			if (drawingmode == false | smiley == null)
+				makeblock(width, height);		// init blocks first time
 			facewidth = width;
 			faceheight = height;
 			return redraw();
+		}
+		
+		public void cookie(int cidx)
+		{  
+		  if (facewidth > 0 & faceheight > 0)
+		  {
+				Log.i("cookie", "which cutter?");
+			switch (cidx)
+			{
+			  case 1: makesmiley(facewidth, faceheight); break;
+			  case 2: makesun(facewidth, faceheight); break;
+			  case 3: maketriangle(facewidth, faceheight); break;
+			  case 4: makeflower(facewidth, faceheight); break;
+			  default: break;
+			}
+		  }
 		}
 	
 	private void renderstamp(Bitmap curtain, int tilex, int tiley, int width, int height)
@@ -620,9 +812,6 @@ private void palettelistener(ImageView tile)
 	     protected Void doInBackground(List<GraphUser>... users) {
 	    	 String imageURL;
 	 	    Bitmap bitmap = null;
-	 	    Log.i("TAG", "Loading Picture");
-			Log.i("testing", "loading pictures");
-	 	    
 	 	    int i = 0;
 	 	    for (GraphUser user : users[0]){           	
 		 	    imageURL = "http://graph.facebook.com/"+user.getId()+"/picture?type=small";
@@ -633,7 +822,7 @@ private void palettelistener(ImageView tile)
 		 	        e.printStackTrace();
 		 	    }
 		 	    moze.loadpic(bitmap);
-		 	    if (i == 50){break;} //uncomment to cap at i
+		 	    if (i == moze.MAXPROFILES){break;} //uncomment to cap at i
 		 	    i++;
 	 	    }
 	 	    return null;
@@ -646,8 +835,6 @@ private void palettelistener(ImageView tile)
 	     
 	     protected void onPostExecute(Void v) {
 	    	ImageView pane = (ImageView) findViewById(R.id.imageView1);
-			Log.i("testing", "time to draw mozaic");
-	    	//moze.loadpic(result);
     		moze.gallery(0,0);
     		pane.setImageBitmap(moze.makemozaic(10,10));
     		pane.setOnTouchListener(new OnTouchListener() {
@@ -657,86 +844,49 @@ private void palettelistener(ImageView tile)
     				  ImageView pane = (ImageView) findViewById(R.id.imageView1);
     				  int touchX = (int) event.getX();
     				  int touchY = (int) event.getY();
-    				  int x = (int) Math.round((moze.scale * touchX - moze.dx) / (moze.dx *2 ));
-    				  int y = (int) Math.round((moze.scale * touchY - moze.dy) / (moze.dy *2));
+    				  Log.i("scale", Float.toString(moze.scale));
+    				  int x = (int) Math.round((moze.scale * touchX - moze.dx) / (moze.dx * moze.scale ));
+    				  int y = (int) Math.round((moze.scale * touchY - moze.dy) / (moze.dy * moze.scale));
     				  Log.i("touched", Integer.toString(x) + ", " + Integer.toString(y));
-    				  //moze.gallery(true);
     				  moze.settile(x,y);
     				  return true;
     			  }
     			});
-    	  		Button drawon = (Button) findViewById(R.id.painteron);
-    	 		drawon.setOnClickListener(new OnClickListener() {
-    				@Override
-    				public void onClick(View v)
-    				{	
-    					moze.gallery();
-    				}
-    			});
+	  		Spinner smileit = (Spinner) findViewById(R.id.cookiecutter);
+	 		smileit.setOnItemSelectedListener(new OnItemSelectedListener() {
+	 		    @Override
+	 		    public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+	 		        moze.cookie(position);
+	 		    }
 
+	 		    @Override
+	 		    public void onNothingSelected(AdapterView<?> parentView) {
+	 		        // your code here
+	 		    }
+
+	 		});
      	   // pane.setImageBitmap(result);
 	     }
 	 }
+	
+	/*
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.gridtiles, menu);
 		return true;
 	}	
-
+*/
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 	  super.onActivityResult(requestCode, resultCode, data);
 	  Session.getActiveSession().onActivityResult(this, requestCode, resultCode, data);
 	}
-/*	
-	@Override
-    public void onStart() {
-        super.onStart();
-        Session.getActiveSession().addCallback(statusCallback);
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        Session.getActiveSession().removeCallback(statusCallback);
-    }
 	
-	private void updateView() {
-        Session session = Session.getActiveSession();
-        if (session.isOpened()) {
-            buttonLoginLogout.setText("Logout");
-            buttonLoginLogout.setOnClickListener(new OnClickListener() {
-                public void onClick(View view) { onClickLogout(); }
-            });
-        } else {
-            buttonLoginLogout.setText("Login");
-            buttonLoginLogout.setOnClickListener(new OnClickListener() {
-                public void onClick(View view) { onClickLogin(); }
-            });
-        }
-    }
-	private void onClickLogin() {
-        Session session = Session.getActiveSession();
-        if (!session.isOpened() && !session.isClosed()) {
-            session.openForRead(new Session.OpenRequest(this).setCallback(statusCallback));
-        } else {
-            Session.openActiveSession(this, true, statusCallback);
-        }
-    }
+	public void remindClick(View v){
 
-    private void onClickLogout() {
-        Session session = Session.getActiveSession();
-        if (!session.isClosed()) {
-            session.closeAndClearTokenInformation();
-        }
-    }
-    
-	private class SessionStatusCallback implements Session.StatusCallback {
-        @Override
-        public void call(Session session, SessionState state, Exception exception) {
-            updateView();
-        }
-    }*/
-	
+		Intent myIntent = new Intent(this, Main.class);
+		
+		startActivity(myIntent);
+	}
 }

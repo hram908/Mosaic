@@ -85,37 +85,47 @@
         android:layout_centerHorizontal="true"
         android:src="@drawable/ic_launcher" />
 	
-    <Button
-        android:id="@+id/painteron"
+    <Spinner
+        android:id="@+id/cookiecutter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/imageView3"
         android:layout_alignRight="@+id/imageView3"
         android:layout_below="@+id/imageView3"
         android:drawableLeft="@drawable/s_button"
-        android:text="Draw Mode" />
-    
+        android:entries="@array/cutters" />
+        
 	<LinearLayout
 	    android:id="@+id/btnLayout"
 	    android:layout_width="wrap_content"
     	android:layout_height="wrap_content"
-    	android:layout_below="@id/painteron"
-    	android:layout_alignLeft="@id/painteron">
+    	android:layout_below="@id/cookiecutter"
+    	android:layout_alignLeft="@id/cookiecutter">
 
 	    <Button
 	        android:id="@+id/btnPublish"
-	        android:layout_width="150dp"
+	        android:layout_width="102dp"
 	        android:layout_height="wrap_content"
 	        android:onClick="publishMozaic"
 	        android:text="Publish" />
 	
 	    <Button
 	        android:id="@+id/saveMozaic"
-	        android:layout_width="153dp"
+	        android:layout_width="98dp"
 	        android:layout_height="wrap_content"
 	        android:onClick="saveMozaic"
 	        android:text="Save" />
 
     </LinearLayout>
+
+	<Button
+	    android:id="@+id/remindButton"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_alignRight="@+id/cookiecutter"
+	    android:layout_alignTop="@+id/btnLayout"
+	    android:layout_toRightOf="@+id/btnLayout"
+	    android:onClick="remindClick"
+	    android:text="Remind" />
 
 </RelativeLayout>
